@@ -1,28 +1,41 @@
-"""
-A-SOINN+ implementation based on SOINN+ Wiwatcharakoses et al. 2019
-GammaGWR implementation used for context learning.
-@author: Aleksej Logacjov (a.logacjov@gmail.com)
-
-"""
+##################################################################
+# A-SOINN+ implementation based on SOINN+ Wiwatcharakoses et al. #
+#                                                                #
+# Wiwatcharakoses, C., & Berrar, D.P. (2020). SOINN+, a          #
+# Self-Organizing Incremental Neural Network for Unsupervised    #
+# Learning from Noisy Data Streams. Expert Syst. Appl., 143.     #
+#                                                                #
+# It further uses parts of Parisi et al.'s Growing Dual-Memory   #
+# and GammaGWR implementation:                                   #
+#                                                                #
+# Parisi, G.I., Tani, J., Weber, C., Wermter, S. (2018)          #
+# Lifelong Learning of Spatiotemporal Representations            #
+# with Dual-Memory Recurrent Self-Organization. arXiv:1805.10966 #
+# https://github.com/giparisi/GDM                                #
+#                                                                #
+# @author: Aleksej Logacjov (a.logacjov@gmail.com)               #
+#                                                                #
+##################################################################
 
 import numpy as np
 from heapq import nsmallest
 import math
 import time
 from collections import deque
-from GDM.gammagwr import GammaGWR
+from GWR.gammagwr import GammaGWR
 
 
 class ASOINNPlus(GammaGWR):
 
     def __init__(self):
-        self.iterations = 0
+        super().__init__()
 
     def init_network(self, input_dimension, num_context=0, e_labels=1):
-        """ Initialize the episodic SOINN+ network.
+        """ Initialize the A-SOINN+ network.
 
+        Overrides GammaGWR's init_network
         It has all properties of the SOINN+ implementation with some
-        additional features of the episodic gamma GWR model:
+        additional features of the GammaGWR and GDM model:
         context descriptors, labels, temporal connections
 
         Parameters
@@ -36,8 +49,8 @@ class ASOINNPlus(GammaGWR):
             Number of different types of labels to consider.
             If e.g. category and instance label desirable: e_labels=2
             Default is 1
-        """
 
+        """
         assert self.iterations < 1, "Can't initialize a trained network"
 
         # Lock to prevent training
@@ -118,7 +131,20 @@ class ASOINNPlus(GammaGWR):
             self.alabels.append(alabels)
 
         # Context coefficients
-        self.alphas = super().compute_alphas(self.depth)
+        self.alphas = self.compute_alphas(self.depth)
+
+
+    def expand_matrix(self, matrix, value=0) -> np.array:
+        '''Expands a matrix on both axes with the given value
+
+        Overrides GammaGWR's expand_matrix to be able to decide
+        which initial value to set in the appended dimensions.
+        '''
+        ext_matrix = np.hstack((matrix,
+                                np.zeros((matrix.shape[0], 1))+value))
+        ext_matrix = np.vstack((ext_matrix,
+                                np.zeros((1, ext_matrix.shape[1]))+value))
+        return ext_matrix
 
     def get_neighbors_of(self, index):
         """ Returns a list of neighbors of given node index. """
@@ -161,7 +187,7 @@ class ASOINNPlus(GammaGWR):
                     # Weights consider also the context descriptors:
                     node_weights = self.weights[node]
                     neighbor_weights = self.weights[n]
-                    eucl_dist = super().compute_distance(node_weights,
+                    eucl_dist = self.compute_distance(node_weights,
                                                          neighbor_weights)
                     if eucl_dist > max_dist_to_neighbor:
                         max_dist_to_neighbor = eucl_dist
@@ -175,7 +201,7 @@ class ASOINNPlus(GammaGWR):
                     if n == node:
                         continue
                     node_weights = self.weights[node]
-                    eucl_dist = super().compute_distance(node_weights,
+                    eucl_dist = self.compute_distance(node_weights,
                                                          n_weights)
                     if eucl_dist < min_dist_to_unit:
                         min_dist_to_unit = eucl_dist
@@ -189,7 +215,7 @@ class ASOINNPlus(GammaGWR):
         if new_node:
             # Expand to consider new neuron but connections
             # are first set to 0
-            self.temporal = super().expand_matrix(self.temporal)
+            self.temporal = self.expand_matrix(self.temporal, value=0)
         if previous_ind != -1 and previous_ind != current_ind:
             # Here the previous activated neuron and the current
             # activated (or newly created) are considered so
@@ -197,7 +223,10 @@ class ASOINNPlus(GammaGWR):
             self.temporal[previous_ind, current_ind] += 1
 
     def update_labels(self, bmu, label, **kwargs) -> None:
-        """Updating the associative matrix """
+        """Updating the associative matrix
+
+        Overrides GammaGWR's update_labels
+        """
         new_node = kwargs.get('new_node', False)
         # Check whether the label already exists and create if not:
         for i, l in enumerate(label):
@@ -226,6 +255,7 @@ class ASOINNPlus(GammaGWR):
     def update_weight(self, index, epsilon) -> None:
         """ Is updating the weights and the context vectors.
 
+        Overrides GammaGWR's update_weight
         Called 'Node Merging' in SOINN+.
 
         Parameters
@@ -243,6 +273,7 @@ class ASOINNPlus(GammaGWR):
     def update_neighbors(self, index, epsilon) -> None:
         """ Updating the weights/contexts of all neighbors of BMU.
 
+        Overrides GammaGWR's update_neighbors
         Called 'Node Merging' in SOINN+.
 
         Parameters
@@ -483,15 +514,6 @@ class ASOINNPlus(GammaGWR):
                 self.lifetimes[neIndex, b_index] = -1
                 self.num_deleted_edges_in_batch += 1
 
-    def expand_matrix_with_minus_1(self, matrix) -> np.array:
-        # Create new matrix with one more row and one more column
-        # => 2x2 ==> 3x3
-        # filled with -1
-        ext_matrix = np.hstack((matrix, -np.ones((matrix.shape[0], 1))))
-        ext_matrix = np.vstack((ext_matrix,
-                                -np.ones((1, ext_matrix.shape[1]))))
-        return ext_matrix
-
     def get_all_reachable_edges(self, index):
         """ Returns all edges that can be reached from given node.
 
@@ -549,17 +571,24 @@ class ASOINNPlus(GammaGWR):
                    key=self.alabels[label_level][neuron_idx].get)
 
     def find_bs(self, dis):
-        # b_index, b_distance, s_index
-        # the n=2 best distances
+        '''Finds BMU and sBMU with corresponding distances
+
+        Overrides GammaGWR's find_bs to extract the sBMU's
+        distance as well.
+        '''
         bs = nsmallest(2, ((k, i) for i, k in enumerate(dis)))
         return bs[0][1], bs[0][0], bs[1][1], bs[1][0]
 
     def find_bmus(self, input_vector, **kwargs):
-        '''Get the first and second BMU'''
+        '''Get the first and second BMU
+
+        Overrides GammaGWR's find_bmus in order to return the
+        distance to the second BMU as well
+        '''
         second_best = kwargs.get('s_best', False)
         distances = np.zeros(self.num_nodes)
         for i in range(0, self.num_nodes):
-            distances[i] = super().compute_distance(self.weights[i],
+            distances[i] = self.compute_distance(self.weights[i],
                                                     input_vector)
         if second_best:
             # Compute best and second-best matching units
@@ -569,10 +598,10 @@ class ASOINNPlus(GammaGWR):
             b_distance = distances[b_index]
             return b_index, b_distance
 
-    def train_egwr(self, ds_vectors, ds_labels, epochs, beta,
-                   l_rates, context, creation_constraint=True,
-                   adaptation_constraint=True,
-                   verbose=True, **kwargs) -> None:
+    def train(self, ds_vectors, ds_labels, epochs, beta,
+              l_rates, context, creation_constraint=True,
+              adaptation_constraint=True,
+              verbose=True, **kwargs) -> None:
         """Training of the network
 
         Parameters
@@ -585,7 +614,7 @@ class ASOINNPlus(GammaGWR):
         beta : float
             Parameter for context learning
         l_rates : list of float
-            Learning rates of each layer
+            Learning rates of BMU and its neighbors
             If working with one layered SOINN+, put [float, None]
         context : bool
             Whether to perform context learning
@@ -681,8 +710,9 @@ class ASOINNPlus(GammaGWR):
                     self.weights.append(self.g_context.copy())
                     self.num_nodes += 1
                     # Expand the lifetimes matrix with -1 entries:
-                    self.lifetimes = self.expand_matrix_with_minus_1(
-                        self.lifetimes
+                    self.lifetimes = self.expand_matrix(
+                        self.lifetimes,
+                        value=-1
                     )
 
                     # Append the winning time of the new node (1):
