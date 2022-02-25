@@ -468,7 +468,6 @@ class ASOINNPlus(GammaGWR):
 
         """
         lifetimes_edges_to_b_index = []
-        lifetimes_edges_to_b_index_nodebase = []
         reachable_edges = self.get_all_reachable_edges(b_index)
         # No edges to delete if there are non:
         if len(reachable_edges) == 0:
@@ -598,11 +597,11 @@ class ASOINNPlus(GammaGWR):
             b_distance = distances[b_index]
             return b_index, b_distance
 
-    def train(self, ds_vectors, ds_labels, epochs, beta,
+    def train_step(self, ds_vectors, ds_labels, epochs, beta,
               l_rates, context, creation_constraint=True,
               adaptation_constraint=True,
-              verbose=True, **kwargs) -> None:
-        """Training of the network
+              verbose=True) -> None:
+        """One training step of the network
 
         Parameters
         ----------
@@ -633,7 +632,6 @@ class ASOINNPlus(GammaGWR):
         self.max_epochs = epochs
         self.epsilon_b, self.epsilon_n = l_rates
         self.beta = beta
-        # self.regulated = regulated
         self.creation_constraint = creation_constraint
         self.adaptation_constraint = adaptation_constraint
         self.context = context
@@ -799,3 +797,48 @@ class ASOINNPlus(GammaGWR):
                        num_edges_after,
                        self.num_deleted_edges_in_batch,
                        self.num_deleted_nodes_in_batch))
+
+    def train(self,
+              dataset,
+              num_context=2,
+              learning_rates=[0.5, 0.005],
+              only_each_nth=2,
+              epochs=1,
+              creation_constraint=True,
+              adaptation_constraint=True):
+        '''A-SOINN+ training
+
+        Parameters
+        ----------
+        dataset: TODO
+        num_context: int
+            number of context vectors to use (K)
+        learning_rates: list of float
+            learning rates for the BMU and its neighbors
+        only_each_nth: int
+            How many frames to skip
+        epochs: int
+            How many epochs to train.
+            For continuous learning it has to be 1
+        creation_constraint, adaptation_constraint : bool, bool
+            Whether to utilize the additional weight adaptation
+            and node creation constraints proposed in the paper.
+
+        '''
+        self.init_network(
+            input_dimension=dataset.vector_size,
+            num_context=num_context,
+            e_labels=2)
+        # Iterate over dataset
+        for x, y in dataset:
+            x, y = x[::only_each_nth], y[::only_each_nth]  # subsampling
+            self.train_step(
+                ds_vectors=x,
+                ds_labels=y,
+                epochs=epochs,
+                beta=0.7,
+                l_rates=learning_rates,
+                context=True,
+                creation_constraint=creation_constraint,
+                adaptation_constraint=adaptation_constraint
+            )
