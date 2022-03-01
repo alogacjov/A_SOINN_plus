@@ -21,8 +21,9 @@ import numpy as np
 from heapq import nsmallest
 import math
 import time
+from tqdm import tqdm
 from collections import deque
-from GWR.gammagwr import GammaGWR
+from models.GWR.gammagwr import GammaGWR
 
 
 class ASOINNPlus(GammaGWR):
@@ -30,7 +31,7 @@ class ASOINNPlus(GammaGWR):
     def __init__(self):
         super().__init__()
 
-    def init_network(self, input_dimension, num_context=0, e_labels=1):
+    def init_network(self, input_dimension, num_context=2, e_labels=1):
         """ Initialize the A-SOINN+ network.
 
         Overrides GammaGWR's init_network
@@ -802,6 +803,7 @@ class ASOINNPlus(GammaGWR):
               dataset,
               num_context=2,
               learning_rates=[0.5, 0.005],
+              input_dimension=128,
               only_each_nth=2,
               epochs=1,
               creation_constraint=True,
@@ -810,11 +812,13 @@ class ASOINNPlus(GammaGWR):
 
         Parameters
         ----------
-        dataset: TODO
+        dataset: data_loader.DataLoader
         num_context: int
             number of context vectors to use (K)
         learning_rates: list of float
             learning rates for the BMU and its neighbors
+        input_dimension: int
+            input feature dimension
         only_each_nth: int
             How many frames to skip
         epochs: int
@@ -826,11 +830,11 @@ class ASOINNPlus(GammaGWR):
 
         '''
         self.init_network(
-            input_dimension=dataset.vector_size,
+            input_dimension=input_dimension,
             num_context=num_context,
             e_labels=2)
         # Iterate over dataset
-        for x, y in dataset:
+        for x, y in tqdm(dataset):
             x, y = x[::only_each_nth], y[::only_each_nth]  # subsampling
             self.train_step(
                 ds_vectors=x,

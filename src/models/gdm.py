@@ -17,7 +17,8 @@
 
 import numpy as np
 import math
-from GWR.gammagwr import GammaGWR
+from tqdm import tqdm
+from models.GWR.gammagwr import GammaGWR
 
 
 class EpisodicGWR(GammaGWR):
@@ -25,12 +26,12 @@ class EpisodicGWR(GammaGWR):
         '''Modified version of Parisi et al.'s episodic_gwr.EpisodicGWR'''
         self.iterations=0
 
-    def init_network(self, vector_size, e_labels, num_context) -> None:
+    def init_network(self, input_dimension, e_labels, num_context) -> None:
         '''Network initialization Overrides GammaGWR's init_network
 
         Parameters
         ----------
-        vector_size: int
+        input_dimension: int
             Nodes' dimension
         e_labels: int
             Number of labels for each node (2: category+instance)
@@ -49,7 +50,7 @@ class EpisodicGWR(GammaGWR):
         self.num_nodes_removed = None
         self.num_nodes_added = None
 
-        self.dimension = vector_size
+        self.dimension = input_dimension
 
         self.num_context = num_context
         self.depth = self.num_context + 1
@@ -401,7 +402,7 @@ class EpisodicGWR(GammaGWR):
 
 
 class GDM():
-    def __init__(self, replay, semantic):
+    def __init__(self, replay=True, semantic=True):
         """ The GDM class
 
         A Modified version of Parisi et al.'s gdm_demo
@@ -453,8 +454,6 @@ class GDM():
                         int(samples[r]),
                         label_level=l_num
                     )
-        print('r_weights shape: ', r_weights.shape)
-        print('r labels shape: ', r_labels.shape)
         return r_weights, r_labels
 
     def train(self,
@@ -463,13 +462,14 @@ class GDM():
               num_context=2,
               learning_rates=[0.5, 0.005],
               a_threshold=[0.3,0.03],
+              input_dimension=128,
               only_each_nth=2,
               epochs=1):
         '''GDM training
 
         Parameters
         ----------
-        dataset: TODO
+        dataset: data_loader.DataLoader
         max_age: int
             Maximal age of edges
         num_context: int
@@ -478,6 +478,8 @@ class GDM():
             learning rates for the BMU and its neighbors
         a_threshold: list of float
             activation thresholds for G-EM and G-SM
+        input_dimension: int
+            input feature dimension
         only_each_nth: int
             How many frames to skip
         epochs: int
@@ -488,7 +490,7 @@ class GDM():
         # Init G-EM:
         g_episodic = EpisodicGWR()
         g_episodic.init_network(
-            vector_size=dataset.vector_size,
+            input_dimension=input_dimension,
             e_labels=2,
             num_context=num_context
         )
@@ -496,14 +498,14 @@ class GDM():
         if self.semantic:
             g_semantic = EpisodicGWR()
             g_semantic.init_network(
-                vector_size=dataset.vector_size,
+                input_dimension=input_dimension,
                 e_labels=1,
                 num_context=num_context
             )
         replay_size = (num_context * 2) + 1
         replay_weights = None
         # Iterate over dataset
-        for x, y in dataset:
+        for x, y in tqdm(dataset):
             x, y = x[::only_each_nth], y[::only_each_nth]  # subsampling
             # G-EM train:
             g_episodic.train(
@@ -521,8 +523,8 @@ class GDM():
             if self.semantic:
                 # Compute G-EM output and forward it to G-SM:
                 e_x, e_y = g_episodic.test(
-                    ds_vectors=e_x,
-                    ds_labels=e_y,
+                    ds_vectors=x,
+                    ds_labels=y,
                     ret_vecs=True
                 )
                 g_semantic.train(
@@ -550,7 +552,8 @@ class GDM():
                         context=False,  # No context learning during replay
                         regulated=False,
                         a_threshold=a_threshold[0],
-                        max_age=max_age
+                        max_age=max_age,
+                        verbose=False
                     )
                     if self.semantic:
                         rl = replay_labels[r, :, 1]
@@ -564,7 +567,8 @@ class GDM():
                             context=False,
                             regulated=True,
                             a_threshold=a_threshold[1],
-                            max_age=max_age
+                            max_age=max_age,
+                            verbose=False
                         )
 
             # Generate pseudo-samples

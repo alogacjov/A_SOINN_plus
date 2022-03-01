@@ -1,16 +1,20 @@
 # Config file for the A-SOINN+ experiments
 
-ALGORITHM: A_SOINN_plus
+ALGORITHM: GDM
 
 ALGORITHM_ARGS:  # TODO: GS parameter lists!
+  MAX_AGE: 6000
   NUM_CONTEXT: 2
-  LR_BMU: 0.5
-  LR_sBMU: 0.005
+  LR_BMU: 0.5  # learning rate of BMU
+  LR_sBMU: 0.005  # learning rate of second BMU
+  A_THRESHOLD_GEM: 0.3  # activation threshold of G-EM network
+  A_THRESHOLD_GSM: 0.03  # activation threshold of G-SM network
   SKIP_FRAMES: 2
   EPOCHS: 1  # 1 since continuous learning
-  CREATION_CONSTRAINT: True
-  ADAPTATION_CONSTRAINT: True
+  REPLAY: True
+  SEMANTIC: True  # With G-SM layer
   INPUT_DIMENSION: 128  # Input dimension of the network
+
 
 # Seed for category shuffling (TODO: Create a correct that fits runs)
 SEED: 128
@@ -26,7 +30,7 @@ DS_PATH: /home/aleksej/phd/working_dir/LL/A_SOINN_plus/data/v_NICO_World_LL_feat
 FE_PATH: null
 
 # Which background complexity to train/test on
-BC: B4
+BC: B1
 
 # Define which objects/instances to use for testing/training
 # Note: o56,o57,o58,o59,o69 are removed to due permission issues
