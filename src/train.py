@@ -1,5 +1,4 @@
 import argparse
-import random
 from models import model
 from utils import config
 from utils import data_loader
@@ -16,8 +15,6 @@ def train(cfg, dataset_path=None):
         if not given, dataset specified in config used
 
     '''
-    # Set seed
-    random.seed(cfg.SEED)
     # Dataset
     ds_path = cfg.DS_PATH if dataset_path is None else dataset_path
     dl = data_loader.DataLoader(
@@ -26,7 +23,19 @@ def train(cfg, dataset_path=None):
         objects=cfg.train_labels,
         sessions=cfg.sessions,
         category_indices=cfg.category_indices,
-        instance_indices=cfg.instance_indices)
+        instance_indices=cfg.instance_indices,
+        random_seed=cfg.SEED
+    )
+    test_dl = data_loader.DataLoader(
+        ds_path=ds_path,
+        fe_path=cfg.FE_PATH,
+        objects=cfg.test_labels,
+        sessions=cfg.sessions,
+        category_indices=cfg.category_indices,
+        instance_indices=cfg.instance_indices,
+        random_seed=cfg.SEED,
+        keep_prev_batch=True
+    )
 
     # Model
     m = model.Model(cfg.ALGORITHM)

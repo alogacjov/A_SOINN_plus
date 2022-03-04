@@ -7,7 +7,7 @@ from PIL import Image
 class DataLoader():
     def __init__(self, ds_path, objects, sessions,
                  category_indices, instance_indices,
-                 fe_path=None, shuffle=False, keep_prev_batch=False):
+                 fe_path=None, random_seed=None, keep_prev_batch=False):
         '''A data loader to yield LL data batches
 
         Parameters
@@ -25,8 +25,8 @@ class DataLoader():
             List of sessions to consider (depends on background complexity)
         category_indices, instance_indices: dict of str
             Map category/instance to a single integer value
-        shuffle: bool
-            Whether to shuffle categories
+        random_seed: int or None
+            Whether to shuffle categories with a given seed
         keep_prev_batch: bool
             Whether to keep the batch of the previous iteration in memory
             for the next iteration. Leads to an increased batch size after
@@ -40,17 +40,20 @@ class DataLoader():
         self.category_indices = category_indices
         self.instance_indices = instance_indices
         self.keep_prev_batch = keep_prev_batch
+        self.prev_batch = None
+        self.prev_labels = None
         self.fe = None
         if fe_path is not None:
             from utils import featurizer
             self.fe = featurizer.Featurizer(fe_path)
         # For iteration
         self.categories = list(self.objects.keys())
-        if shuffle: random.shuffle(self.categories)
+        if random_seed is not None:
+            random.seed(random_seed)
+            random.shuffle(self.categories)
         self.categories.reverse()  # To pop in correct order
     
     def __next__(self):
-        current_batch = []
         if len(self.categories) != 0:
             category = self.categories.pop()
             category_batch = []
@@ -71,12 +74,18 @@ class DataLoader():
                     labels += _labels*len(arrs)
             category_batch = np.vstack(np.array(category_batch))
             labels = np.array(labels)
-            return category_batch, labels
-            # if self.keep_prev_batch:
-            #     current_batch.append(category_batch)
-            #     for curr_batch in current_batch:
-            #         return curr_batch
-            # else:
+            if self.keep_prev_batch:
+                if self.prev_batch is None:
+                    self.prev_batch = category_batch
+                    self.prev_labels = labels
+                else:
+                    self.prev_batch = np.vstack([self.prev_batch,
+                                                 category_batch])
+                    self.prev_labels = np.vstack([self.prev_labels,
+                                                  labels])
+                return self.prev_batch, self.prev_labels
+            else:
+                return category_batch, labels
         else:
             raise StopIteration
 

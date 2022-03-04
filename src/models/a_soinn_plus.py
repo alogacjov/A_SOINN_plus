@@ -846,3 +846,59 @@ class ASOINNPlus(GammaGWR):
                 creation_constraint=creation_constraint,
                 adaptation_constraint=adaptation_constraint
             )
+
+
+    def test(self, ds_vectors, ds_labels):
+        """Test the network on a given testset.
+
+        Parameters
+        ----------
+        ds_vectors : np.array
+            input x
+        ds_labels : np.array
+            labels y
+
+        Returns
+        -------
+        np.array, np.array, np.array
+            BMU's weights and corresponding labels as well as accuracies
+
+        """
+        test_samples = ds_vectors.shape[0]
+        # F.e. test sample save which was/is the BMU. Init: -1:
+        self.bmus_index = -np.ones(test_samples)
+        # A weight vector f.e. test sample. Init: 0:
+        self.bmus_weight = np.zeros((test_samples, self.dimension))
+        # Each test sample can have mult. labels (categorie & instance):
+        self.bmus_label = -np.ones((self.num_labels, test_samples))
+        # same dimension like global context or weights matrix:
+        input_context = np.zeros((self.depth, self.dimension))
+
+        acc_counter = np.zeros(self.num_labels)
+        avrg_b_dist = 0
+        for i in range(0, test_samples):
+            # Again first entry in context matrix is the input itself
+            input_context[0] = ds_vectors[i]
+            # Find the BMU
+            b_index, b_distance = self.find_bmus(input_context)
+            avrg_b_dist += b_distance
+            # Fill the arrays, defined above
+            self.bmus_index[i] = b_index
+            self.bmus_weight[i] = self.weights[b_index][0]
+            for l in range(0, self.num_labels):
+                self.bmus_label[l, i] = self.get_label_of_neuron(
+                    b_index,
+                    label_level=l
+                )
+            input_context_copy = input_context.copy()
+            for j in range(1, self.depth):
+                input_context_copy[j] = input_context[j-1]
+            input_context = input_context_copy
+            for l in range(0, self.num_labels):
+                if self.bmus_label[l, i] == ds_labels[i, l]:
+                    acc_counter[l] += 1
+        acc = acc_counter / ds_vectors.shape[0]
+        print('B distance during test: ', avrg_b_dist/test_samples)
+        s_labels = -np.ones((test_samples, 1))
+        s_labels[:, 0] = ds_labels[:, 1]
+        return self.bmus_weight, s_labels, acc

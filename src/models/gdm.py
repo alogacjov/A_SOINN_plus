@@ -357,9 +357,22 @@ class EpisodicGWR(GammaGWR):
         num_rmvd_nodes = self.remove_isolated_nodes(verbose=verbose)
         self.num_nodes_removed = num_rmvd_nodes
 
-    def test(self, ds_vectors, ds_labels, **kwargs):
-        test_accuracy = kwargs.get('test_accuracy', False)
-        test_vecs = kwargs.get('ret_vecs', False)
+    def test(self, ds_vectors, ds_labels):
+        """Test the network on a given testset.
+
+        Parameters
+        ----------
+        ds_vectors : np.array
+            input x
+        ds_labels : np.array
+            labels y
+
+        Returns
+        -------
+        np.array, np.array, np.array
+            BMU's weights and corresponding labels as well as accuracies
+
+        """
         test_samples = ds_vectors.shape[0]
         self.bmus_index = -np.ones(test_samples)
         self.bmus_weight = np.zeros((test_samples, self.dimension))
@@ -369,8 +382,7 @@ class EpisodicGWR(GammaGWR):
         # same dimension like global context or weights matrix:
         input_context = np.zeros((self.depth, self.dimension))
 
-        if test_accuracy:
-            acc_counter = np.zeros(self.num_labels)
+        acc_counter = np.zeros(self.num_labels)
         for i in range(0, test_samples):
             # Again first entry in context matrix is the input itself
             input_context[0] = ds_vectors[i]
@@ -389,16 +401,13 @@ class EpisodicGWR(GammaGWR):
             for j in range(1, self.depth):
                 input_context_copy[j] = input_context[j-1]
             input_context = input_context_copy
-            if test_accuracy:
-                for l_index in range(0, self.num_labels):
-                    if self.bmus_label[l_index, i] == ds_labels[i, l_index]:
-                        acc_counter[l_index] += 1
-        if test_accuracy:
-            self.test_accuracy = acc_counter / ds_vectors.shape[0]
-        if test_vecs:
-            s_labels = -np.ones((test_samples, 1))
-            s_labels[:, 0] = ds_labels[:, 1]
-            return self.bmus_weight, s_labels
+            for l_index in range(0, self.num_labels):
+                if self.bmus_label[l_index, i] == ds_labels[i, l_index]:
+                    acc_counter[l_index] += 1
+        acc = acc_counter / ds_vectors.shape[0]
+        s_labels = -np.ones((test_samples, 1))
+        s_labels[:, 0] = ds_labels[:, 1]
+        return self.bmus_weight, s_labels, acc
 
 
 class GDM():
@@ -522,10 +531,9 @@ class GDM():
             # G-SM train:
             if self.semantic:
                 # Compute G-EM output and forward it to G-SM:
-                e_x, e_y = g_episodic.test(
+                e_x, e_y, _ = g_episodic.test(
                     ds_vectors=x,
-                    ds_labels=y,
-                    ret_vecs=True
+                    ds_labels=y
                 )
                 g_semantic.train(
                     ds_vectors=e_x,
