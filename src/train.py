@@ -2,6 +2,7 @@ import argparse
 from models import model
 from utils import config
 from utils import data_loader
+from utils import logger
 
 
 def train(cfg, dataset_path=None):
@@ -36,10 +37,17 @@ def train(cfg, dataset_path=None):
         random_seed=cfg.SEED,
         keep_prev_batch=True
     )
-
+    # Logging
+    _logger = logger.Logger(
+        'logs/',
+        'average_accuracy',
+        'average_forgetting'
+    )
     # Model
     m = model.Model(cfg.ALGORITHM)
-    m.train(dataset=dl, args=cfg.ALGORITHM_ARGS)
+    m.train(dataset=dl, test_dataset=test_dl, logger=_logger,
+            args=cfg.ALGORITHM_ARGS)
+    _logger.write()
 
 
 if __name__ == '__main__':

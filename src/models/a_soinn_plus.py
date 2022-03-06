@@ -801,13 +801,15 @@ class ASOINNPlus(GammaGWR):
 
     def train(self,
               dataset,
+              test_dataset=None,
               num_context=2,
               learning_rates=[0.5, 0.005],
               input_dimension=128,
               only_each_nth=2,
               epochs=1,
               creation_constraint=True,
-              adaptation_constraint=True):
+              adaptation_constraint=True,
+              logger=None):
         '''A-SOINN+ training
 
         Parameters
@@ -827,6 +829,8 @@ class ASOINNPlus(GammaGWR):
         creation_constraint, adaptation_constraint : bool, bool
             Whether to utilize the additional weight adaptation
             and node creation constraints proposed in the paper.
+        logger: utils.logger.Logger
+            Whether to log test results
 
         '''
         self.init_network(
@@ -846,6 +850,11 @@ class ASOINNPlus(GammaGWR):
                 creation_constraint=creation_constraint,
                 adaptation_constraint=adaptation_constraint
             )
+            if test_dataset is not None and logger is not None:
+                xts, yts = test_dataset.__next__()
+                # Get the category accuracies of each test subset
+                accs = [self.test(xt,yt)[2][1] for xt,yt in zip(xts, yts)]
+                logger.log(accs)
 
 
     def test(self, ds_vectors, ds_labels):

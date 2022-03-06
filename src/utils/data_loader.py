@@ -40,8 +40,8 @@ class DataLoader():
         self.category_indices = category_indices
         self.instance_indices = instance_indices
         self.keep_prev_batch = keep_prev_batch
-        self.prev_batch = None
-        self.prev_labels = None
+        self.prev_batch = []
+        self.prev_labels = []
         self.fe = None
         if fe_path is not None:
             from utils import featurizer
@@ -75,14 +75,8 @@ class DataLoader():
             category_batch = np.vstack(np.array(category_batch))
             labels = np.array(labels)
             if self.keep_prev_batch:
-                if self.prev_batch is None:
-                    self.prev_batch = category_batch
-                    self.prev_labels = labels
-                else:
-                    self.prev_batch = np.vstack([self.prev_batch,
-                                                 category_batch])
-                    self.prev_labels = np.vstack([self.prev_labels,
-                                                  labels])
+                self.prev_batch.append(category_batch)
+                self.prev_labels.append(labels)
                 return self.prev_batch, self.prev_labels
             else:
                 return category_batch, labels
