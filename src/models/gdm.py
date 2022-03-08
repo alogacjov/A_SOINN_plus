@@ -384,7 +384,7 @@ class EpisodicGWR(GammaGWR):
 
         acc_counter = np.zeros(self.num_labels)
         for i in range(0, test_samples):
-            # Again first entry in context matrix is the input itself
+            # First entry in context matrix is the input itself
             input_context[0] = ds_vectors[i]
             # Find the BMU
             b_index, b_distance = super().find_bmus(input_context)
@@ -406,7 +406,7 @@ class EpisodicGWR(GammaGWR):
                     acc_counter[l_index] += 1
         acc = acc_counter / ds_vectors.shape[0]
         s_labels = -np.ones((test_samples, 1))
-        s_labels[:, 0] = ds_labels[:, 1]
+        s_labels[:, 0] = ds_labels[:, -1]
         return self.bmus_weight, s_labels, acc
 
 
@@ -468,12 +468,14 @@ class GDM():
     def train(self,
               dataset,
               max_age,
+              test_dataset=None,
               num_context=2,
               learning_rates=[0.5, 0.005],
               a_threshold=[0.3,0.03],
               input_dimension=128,
               only_each_nth=2,
-              epochs=1):
+              epochs=1,
+              logger=None):
         '''GDM training
 
         Parameters
@@ -584,4 +586,20 @@ class GDM():
                 replay_weights, replay_labels = self.replay_samples(
                     net=g_episodic,
                     size=replay_size
+                )
+
+            if test_dataset is not None and logger is not None:
+                xts, yts = test_dataset.__next__()
+                accs = []
+                num_nodes = g_episodic.num_nodes
+                # Category accuracies of each test subset using G-SM
+                for xt, yt in zip(xts, yts):
+                    _w, _l, acc = g_episodic.test(xt, yt)
+                    if self.semantic:
+                        num_nodes += g_semantic.num_nodes
+                        _, _, acc = g_semantic.test(_w, _l)
+                    accs.append(acc)
+                logger.log(
+                    task_accuracies=accs,
+                    unit_num=num_nodes
                 )

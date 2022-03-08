@@ -19,23 +19,28 @@ class Logger():
             Where to save the log file
         args: strings
             which metrics to log, allowed:
-            ['average_accuracy', 'average_forgetting']
+            ['average_accuracy', 'average_forgetting', 'num_units']
 
         '''
         self.output_path = output_path
         self.log_avrg_acc =  'average_accuracy' in args
         self.log_avrg_frgt =  'average_forgetting' in args
+        self.log_num_units =  'num_units' in args
         self.avrg_accuracies = []
         self.avrg_forgettings = []
+        self.num_units = []
         self.all_t_accs = []  # Accuracy results of ever task
 
-    def log(self, task_accuracies):
+    def log(self, task_accuracies, unit_num=None):
         '''logs the given metrics
 
         Parameters
         ----------
         task_accuracies : list of float
             Accuracies of tasks j while learning task k
+        unit_num : int
+            If num_units shall be logged,
+            it has to be given as a parameter
 
         '''
         if self.log_avrg_acc:
@@ -45,6 +50,9 @@ class Logger():
                 self.average_forgetting(task_accuracies)
             )
         self.all_t_accs.append(task_accuracies)
+        if self.log_num_units and unit_num is not None:
+            self.num_units.append(unit_num)
+        self.write()
 
     def average_forgetting(self, task_accuracies):
         '''Computes average forgetting of the current task k

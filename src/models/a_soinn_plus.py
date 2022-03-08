@@ -854,7 +854,7 @@ class ASOINNPlus(GammaGWR):
                 xts, yts = test_dataset.__next__()
                 # Get the category accuracies of each test subset
                 accs = [self.test(xt,yt)[2][1] for xt,yt in zip(xts, yts)]
-                logger.log(accs)
+                logger.log(task_accuracies=accs, unit_num=self.num_nodes)
 
 
     def test(self, ds_vectors, ds_labels):

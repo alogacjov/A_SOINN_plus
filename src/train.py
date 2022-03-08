@@ -41,13 +41,13 @@ def train(cfg, dataset_path=None):
     _logger = logger.Logger(
         'logs/',
         'average_accuracy',
-        'average_forgetting'
+        'average_forgetting',
+        'num_units'
     )
     # Model
     m = model.Model(cfg.ALGORITHM)
     m.train(dataset=dl, test_dataset=test_dl, logger=_logger,
             args=cfg.ALGORITHM_ARGS)
-    _logger.write()
 
 
 if __name__ == '__main__':
