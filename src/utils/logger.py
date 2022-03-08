@@ -19,19 +19,21 @@ class Logger():
             Where to save the log file
         args: strings
             which metrics to log, allowed:
-            ['average_accuracy', 'average_forgetting', 'num_units']
+            ['average_accuracy', 'average_forgetting', 'num_units', 'time']
 
         '''
         self.output_path = output_path
-        self.log_avrg_acc =  'average_accuracy' in args
-        self.log_avrg_frgt =  'average_forgetting' in args
-        self.log_num_units =  'num_units' in args
+        self.log_avrg_acc = 'average_accuracy' in args
+        self.log_avrg_frgt = 'average_forgetting' in args
+        self.log_num_units = 'num_units' in args
+        self.log_time = 'time' in args
         self.avrg_accuracies = []
         self.avrg_forgettings = []
         self.num_units = []
+        self.batch_times = []
         self.all_t_accs = []  # Accuracy results of ever task
 
-    def log(self, task_accuracies, unit_num=None):
+    def log(self, task_accuracies, unit_num=None, batch_duration_sec=None):
         '''logs the given metrics
 
         Parameters
@@ -52,6 +54,8 @@ class Logger():
         self.all_t_accs.append(task_accuracies)
         if self.log_num_units and unit_num is not None:
             self.num_units.append(unit_num)
+        if self.log_time and batch_duration_sec is not None:
+            self.batch_times.append(batch_duration_sec)
         self.write()
 
     def average_forgetting(self, task_accuracies):
@@ -80,5 +84,9 @@ class Logger():
 
     def write(self):
         '''Writes current log state to output file'''
+        print(f'acc: {self.avrg_accuracies} \n',
+              f'frgt: {self.avrg_forgettings} \n',
+              f'num_units: {self.num_units} \n',
+              f'times: {self.batch_times}')
         log_df = pd.DataFrame()
         # TODO

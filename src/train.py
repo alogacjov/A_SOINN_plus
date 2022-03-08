@@ -37,15 +37,17 @@ def train(cfg, dataset_path=None):
         random_seed=cfg.SEED,
         keep_prev_batch=True
     )
+    # Model
+    m = model.Model(cfg.ALGORITHM)
     # Logging
     _logger = logger.Logger(
         'logs/',
         'average_accuracy',
         'average_forgetting',
-        'num_units'
+        'num_units',
+        'time'
     )
-    # Model
-    m = model.Model(cfg.ALGORITHM)
+    # Train
     m.train(dataset=dl, test_dataset=test_dl, logger=_logger,
             args=cfg.ALGORITHM_ARGS)
 

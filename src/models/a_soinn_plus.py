@@ -840,6 +840,7 @@ class ASOINNPlus(GammaGWR):
         # Iterate over dataset
         for x, y in tqdm(dataset):
             x, y = x[::only_each_nth], y[::only_each_nth]  # subsampling
+            st = time.time()
             self.train_step(
                 ds_vectors=x,
                 ds_labels=y,
@@ -850,11 +851,16 @@ class ASOINNPlus(GammaGWR):
                 creation_constraint=creation_constraint,
                 adaptation_constraint=adaptation_constraint
             )
+            train_time = time.time()-st
             if test_dataset is not None and logger is not None:
                 xts, yts = test_dataset.__next__()
                 # Get the category accuracies of each test subset
                 accs = [self.test(xt,yt)[2][1] for xt,yt in zip(xts, yts)]
-                logger.log(task_accuracies=accs, unit_num=self.num_nodes)
+                logger.log(
+                    task_accuracies=accs,
+                    unit_num=self.num_nodes,
+                    batch_duration_sec=train_time
+                )
 
 
     def test(self, ds_vectors, ds_labels):

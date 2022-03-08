@@ -17,6 +17,7 @@
 
 import numpy as np
 import math
+import time
 from tqdm import tqdm
 from models.GWR.gammagwr import GammaGWR
 
@@ -518,6 +519,7 @@ class GDM():
         # Iterate over dataset
         for x, y in tqdm(dataset):
             x, y = x[::only_each_nth], y[::only_each_nth]  # subsampling
+            st = time.time()
             # G-EM train:
             g_episodic.train(
                 ds_vectors=x,
@@ -587,7 +589,7 @@ class GDM():
                     net=g_episodic,
                     size=replay_size
                 )
-
+            train_time = time.time()-st
             if test_dataset is not None and logger is not None:
                 xts, yts = test_dataset.__next__()
                 accs = []
@@ -601,5 +603,6 @@ class GDM():
                     accs.append(acc)
                 logger.log(
                     task_accuracies=accs,
-                    unit_num=num_nodes
+                    unit_num=num_nodes,
+                    batch_duration_sec=train_time
                 )
