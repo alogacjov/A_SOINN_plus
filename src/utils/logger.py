@@ -1,7 +1,7 @@
 import os
+import csv
 import pickle
 import numpy as np
-import pandas as pd
 import tempfile
 
 
@@ -17,7 +17,7 @@ class Logger():
         doi: 10.1007/978-3-030-01252-6_33.
         'time' allows logging of time in seconds after every iteration
         'space' allows logging the space requirements of the given
-        model(s) in bytes. The .pkl format is used.
+        model in bytes assuming a .pkl file format.
 
         Parameters
         ----------
@@ -30,6 +30,7 @@ class Logger():
 
         '''
         self.output_path = output_path
+        if not os.path.exists(output_path): os.makedirs(output_path)
         self.log_avrg_acc = 'average_accuracy' in args
         self.log_avrg_frgt = 'average_forgetting' in args
         self.log_num_units = 'num_units' in args
@@ -110,10 +111,19 @@ class Logger():
 
     def write(self):
         '''Writes current log state to output file'''
-        print(f'acc: {self.avrg_accuracies} \n',
-              f'frgt: {self.avrg_forgettings} \n',
-              f'num_units: {self.num_units} \n',
-              f'times in seconds: {self.batch_times} \n',
-              f'model sizes in bytes: {self.model_sizes}')
-        # log_df = pd.DataFrame()
-        # TODO
+        logs = {}
+        if self.log_avrg_acc:
+            logs['average_accuracy'] = self.avrg_accuracies
+        if self.log_avrg_frgt:
+            logs['average_forgetting'] = self.avrg_forgettings
+        if self.log_num_units:
+            logs['num_units'] = self.num_units
+        if self.log_time:
+            logs['task_time_sec'] = self.batch_times
+        if self.log_space:
+            logs['model_size_bytes'] = self.model_sizes
+        # Write to file:
+        with open(os.path.join(self.output_path, 'logs.csv'), "w") as f:
+            writer = csv.writer(f)
+            writer.writerow(logs.keys())
+            writer.writerows(zip(*logs.values()))

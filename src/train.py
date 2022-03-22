@@ -1,4 +1,5 @@
 import argparse
+from datetime import datetime
 from models import model
 from utils import config
 from utils import data_loader
@@ -40,8 +41,10 @@ def train(cfg, dataset_path=None):
     # Model
     m = model.Model(cfg.ALGORITHM)
     # Logging
+    log_dir = f'logs/{datetime.now().strftime("%Y_%m_%d__%H_%M_%S")}/'
+    print(f'Logging stats in {log_dir}')
     _logger = logger.Logger(
-        'logs/',
+        log_dir,
         'average_accuracy',
         'average_forgetting',
         'num_units',
