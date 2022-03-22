@@ -14,8 +14,8 @@ class Config:
         self.TEST_OBJECTS = cfg['TEST_OBJECTS']
         self.SEED = cfg['SEED']
 
-        self.ALGORITHM = cfg['ALGORITHM']
         self.ALGORITHM_ARGS = cfg['ALGORITHM_ARGS']
+        self.ALGORITHM = self.ALGORITHM_ARGS['ALGORITHM']
 
     @property
     def sessions(self):

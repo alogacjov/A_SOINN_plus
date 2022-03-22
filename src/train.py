@@ -51,6 +51,7 @@ def train(cfg, dataset_path=None):
         'time',
         'space'
     )
+    _logger.write_config(cfg.ALGORITHM_ARGS)
     # Train
     m.train(dataset=dl, test_dataset=test_dl, logger=_logger,
             args=cfg.ALGORITHM_ARGS)

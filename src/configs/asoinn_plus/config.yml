@@ -1,8 +1,7 @@
 # Config file for the A-SOINN+ experiments
 
-ALGORITHM: A_SOINN_plus
-
 ALGORITHM_ARGS:  # TODO: GS parameter lists!
+  ALGORITHM: A_SOINN_plus
   NUM_CONTEXT: 2
   LR_BMU: 0.5
   LR_sBMU: 0.005
@@ -20,9 +19,6 @@ SEED: 128
 DS_PATH: /home/aleksej/phd/working_dir/LL/A_SOINN_plus/data/v_NICO_World_LL_feature_vectors
 
 # Path to feature extractor pkl file (null: do not use feature extraction)
-# TODO: remove own dir
-#FE_PATH: /home/aleksej/phd/working_dir/LL/A_SOINN_plus/data/feature_extractor
-# FE_PATH:  /home/aleksej/phd/working_dir/LL/A_SOINN_plus/data/vNICORe100_feature_extractor_instance_128.h5
 FE_PATH: null
 
 # Which background complexity to train/test on

@@ -3,6 +3,7 @@ import csv
 import pickle
 import numpy as np
 import tempfile
+import json
 
 
 class Logger():
@@ -108,7 +109,6 @@ class Logger():
         _temp_file.close()
         return filesize
 
-
     def write(self):
         '''Writes current log state to output file'''
         logs = {}
@@ -127,3 +127,8 @@ class Logger():
             writer = csv.writer(f)
             writer.writerow(logs.keys())
             writer.writerows(zip(*logs.values()))
+
+    def write_config(self, config_dict):
+        '''Writes dict to json. Useful for logging model configurations'''
+        with open(os.path.join(self.output_path, 'config.json'), 'w') as f:
+            json.dump(config_dict, f)

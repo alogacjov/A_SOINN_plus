@@ -914,7 +914,7 @@ class ASOINNPlus(GammaGWR):
                 if self.bmus_label[l, i] == ds_labels[i, l]:
                     acc_counter[l] += 1
         acc = acc_counter / ds_vectors.shape[0]
-        print('B distance during test: ', avrg_b_dist/test_samples)
+        # print('B distance during test: ', avrg_b_dist/test_samples)
         s_labels = -np.ones((test_samples, 1))
         s_labels[:, 0] = ds_labels[:, 1]
         return self.bmus_weight, s_labels, acc
