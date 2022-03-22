@@ -45,7 +45,8 @@ def train(cfg, dataset_path=None):
         'average_accuracy',
         'average_forgetting',
         'num_units',
-        'time'
+        'time',
+        'space'
     )
     # Train
     m.train(dataset=dl, test_dataset=test_dl, logger=_logger,

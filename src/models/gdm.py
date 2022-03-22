@@ -427,6 +427,8 @@ class GDM():
         """
         self.replay = replay
         self.semantic = semantic
+        self.g_episodic = None
+        self.g_semantic = None
 
 
     def replay_samples(self, net, size) -> (np.ndarray, np.ndarray):
@@ -500,16 +502,16 @@ class GDM():
 
         '''
         # Init G-EM:
-        g_episodic = EpisodicGWR()
-        g_episodic.init_network(
+        self.g_episodic = EpisodicGWR()
+        self.g_episodic.init_network(
             input_dimension=input_dimension,
             e_labels=2,
             num_context=num_context
         )
         # Init G-SM:
         if self.semantic:
-            g_semantic = EpisodicGWR()
-            g_semantic.init_network(
+            self.g_semantic = EpisodicGWR()
+            self.g_semantic.init_network(
                 input_dimension=input_dimension,
                 e_labels=1,
                 num_context=num_context
@@ -521,7 +523,7 @@ class GDM():
             x, y = x[::only_each_nth], y[::only_each_nth]  # subsampling
             st = time.time()
             # G-EM train:
-            g_episodic.train(
+            self.g_episodic.train(
                 ds_vectors=x,
                 ds_labels=y,
                 epochs=epochs,
@@ -535,11 +537,11 @@ class GDM():
             # G-SM train:
             if self.semantic:
                 # Compute G-EM output and forward it to G-SM:
-                e_x, e_y, _ = g_episodic.test(
+                e_x, e_y, _ = self.g_episodic.test(
                     ds_vectors=x,
                     ds_labels=y
                 )
-                g_semantic.train(
+                self.g_semantic.train(
                     ds_vectors=e_x,
                     ds_labels=e_y,
                     epochs=epochs,
@@ -555,7 +557,7 @@ class GDM():
             if self.replay and replay_weights is not None:
                 # Replay pseudo-samples
                 for r in range(0, replay_weights.shape[0]):
-                    g_episodic.train(
+                    self.g_episodic.train(
                         ds_vectors=replay_weights[r],
                         ds_labels=replay_labels[r, :],
                         epochs=epochs,
@@ -570,7 +572,7 @@ class GDM():
                     if self.semantic:
                         rl = replay_labels[r, :, 1]
                         rl = rl.reshape(len(rl), 1)
-                        g_semantic.train(
+                        self.g_semantic.train(
                             ds_vectors=replay_weights[r],
                             ds_labels=rl,
                             epochs=epochs,
@@ -586,23 +588,24 @@ class GDM():
             # Generate pseudo-samples
             if self.replay:
                 replay_weights, replay_labels = self.replay_samples(
-                    net=g_episodic,
+                    net=self.g_episodic,
                     size=replay_size
                 )
             train_time = time.time()-st
             if test_dataset is not None and logger is not None:
                 xts, yts = test_dataset.__next__()
                 accs = []
-                num_nodes = g_episodic.num_nodes
+                num_nodes = self.g_episodic.num_nodes
                 # Category accuracies of each test subset using G-SM
                 for xt, yt in zip(xts, yts):
-                    _w, _l, acc = g_episodic.test(xt, yt)
+                    _w, _l, acc = self.g_episodic.test(xt, yt)
                     if self.semantic:
-                        num_nodes += g_semantic.num_nodes
-                        _, _, acc = g_semantic.test(_w, _l)
+                        num_nodes += self.g_semantic.num_nodes
+                        _, _, acc = self.g_semantic.test(_w, _l)
                     accs.append(acc)
                 logger.log(
                     task_accuracies=accs,
                     unit_num=num_nodes,
-                    batch_duration_sec=train_time
+                    batch_duration_sec=train_time,
+                    model=self
                 )

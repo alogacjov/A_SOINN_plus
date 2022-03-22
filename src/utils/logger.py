@@ -1,5 +1,8 @@
+import os
+import pickle
 import numpy as np
 import pandas as pd
+import tempfile
 
 
 class Logger():
@@ -12,6 +15,9 @@ class Logger():
         Forgetting and Intransigence,”
         arXiv:1801.10112 [cs], vol. 11215, pp. 556–572, 2018,
         doi: 10.1007/978-3-030-01252-6_33.
+        'time' allows logging of time in seconds after every iteration
+        'space' allows logging the space requirements of the given
+        model(s) in bytes. The .pkl format is used.
 
         Parameters
         ----------
@@ -19,7 +25,8 @@ class Logger():
             Where to save the log file
         args: strings
             which metrics to log, allowed:
-            ['average_accuracy', 'average_forgetting', 'num_units', 'time']
+            ['average_accuracy', 'average_forgetting',
+             'num_units', 'time', 'space']
 
         '''
         self.output_path = output_path
@@ -27,13 +34,18 @@ class Logger():
         self.log_avrg_frgt = 'average_forgetting' in args
         self.log_num_units = 'num_units' in args
         self.log_time = 'time' in args
+        self.log_space = 'space' in args
         self.avrg_accuracies = []
         self.avrg_forgettings = []
         self.num_units = []
         self.batch_times = []
+        self.model_sizes = []
         self.all_t_accs = []  # Accuracy results of ever task
 
-    def log(self, task_accuracies, unit_num=None, batch_duration_sec=None):
+    def log(self, task_accuracies,
+            unit_num=None,
+            batch_duration_sec=None,
+            model=None):
         '''logs the given metrics
 
         Parameters
@@ -43,6 +55,10 @@ class Logger():
         unit_num : int
             If num_units shall be logged,
             it has to be given as a parameter
+        batch_duration_sec : float
+            seconds to log
+        model : object
+            log size in bytes of given object, when saved as .pkl file
 
         '''
         if self.log_avrg_acc:
@@ -56,6 +72,8 @@ class Logger():
             self.num_units.append(unit_num)
         if self.log_time and batch_duration_sec is not None:
             self.batch_times.append(batch_duration_sec)
+        if self.log_space and model is not None:
+            self.model_sizes.append(self.get_size(model))
         self.write()
 
     def average_forgetting(self, task_accuracies):
@@ -81,12 +99,21 @@ class Logger():
             forgetting_k.append(forgetting_j_k)
         return np.mean(forgetting_k)
 
+    def get_size(self, object):
+        '''Get size in bytes of given object when saved as .pkl file'''
+        _temp_file = tempfile.NamedTemporaryFile()
+        pickle.dump(object, _temp_file)
+        filesize = os.stat(_temp_file.name).st_size
+        _temp_file.close()
+        return filesize
+
 
     def write(self):
         '''Writes current log state to output file'''
         print(f'acc: {self.avrg_accuracies} \n',
               f'frgt: {self.avrg_forgettings} \n',
               f'num_units: {self.num_units} \n',
-              f'times: {self.batch_times}')
-        log_df = pd.DataFrame()
+              f'times in seconds: {self.batch_times} \n',
+              f'model sizes in bytes: {self.model_sizes}')
+        # log_df = pd.DataFrame()
         # TODO

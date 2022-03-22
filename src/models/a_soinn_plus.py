@@ -859,7 +859,8 @@ class ASOINNPlus(GammaGWR):
                 logger.log(
                     task_accuracies=accs,
                     unit_num=self.num_nodes,
-                    batch_duration_sec=train_time
+                    batch_duration_sec=train_time,
+                    model=self
                 )
 
 
