@@ -23,7 +23,10 @@ class Config:
         with open(os.path.join(self.DS_PATH,
                                'background_complexities.json')) as f:
             bc_dict = json.load(f)
-        return bc_dict[self.BC]
+        bc_list = []
+        for bc in self.BC:
+            bc_list += bc_dict[bc]
+        return bc_list
 
     @property
     def labels(self):

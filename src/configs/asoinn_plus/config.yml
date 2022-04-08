@@ -22,7 +22,7 @@ DS_PATH: /home/aleksej/phd/working_dir/LL/A_SOINN_plus/data/v_NICO_World_LL_feat
 FE_PATH: null
 
 # Which background complexity to train/test on
-BC: B4
+BC: [B4]
 
 # Define which objects/instances to use for testing/training
 # Note: o56,o57,o58,o59,o69 are removed to due permission issues
