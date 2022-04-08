@@ -14,12 +14,17 @@ ALGORITHM_ARGS:  # TODO: GS parameter lists!
 # Seed for category shuffling (TODO: Create a correct that fits runs)
 SEED: 128
 
+# Categories order
+# CATEGORY_ORDER: null
+CATEGORY_ORDER: ['ball', 'bottle', 'cup', 'doughnut', 'glasses', 'pen', 'pocket_watch', 'present', 'vase', 'book']
+
 # Path to dataset (TODO: remove own directory)
 # DS_PATH: /home/aleksej/phd/working_dir/LL/A_SOINN_plus/data/v_NICO_World_LL
-DS_PATH: /home/aleksej/phd/working_dir/LL/A_SOINN_plus/data/v_NICO_World_LL_feature_vectors
+DS_PATH: /home/aleksej/phd/working_dir/LL/data/v_NICO_World_LL_feature_vectors
 
 # Path to feature extractor pkl file (null: do not use feature extraction)
 FE_PATH: null
+  # FE_PATH: /home/aleksej/phd/working_dir/LL/A_SOINN_plus/data/vNICORe100_feature_extractor_instance_128.h5
 
 # Which background complexity to train/test on
 BC: [B4]

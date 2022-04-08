@@ -26,7 +26,8 @@ def train(cfg, dataset_path=None):
         sessions=cfg.sessions,
         category_indices=cfg.category_indices,
         instance_indices=cfg.instance_indices,
-        random_seed=cfg.SEED
+        random_seed=cfg.SEED,
+        category_order=cfg.CATEGORY_ORDER
     )
     test_dl = data_loader.DataLoader(
         ds_path=ds_path,
@@ -36,7 +37,8 @@ def train(cfg, dataset_path=None):
         category_indices=cfg.category_indices,
         instance_indices=cfg.instance_indices,
         random_seed=cfg.SEED,
-        keep_prev_batch=True
+        keep_prev_batch=True,
+        category_order=cfg.CATEGORY_ORDER
     )
     # Model
     m = model.Model(cfg.ALGORITHM)

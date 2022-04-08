@@ -7,7 +7,9 @@ from PIL import Image
 class DataLoader():
     def __init__(self, ds_path, objects, sessions,
                  category_indices, instance_indices,
-                 fe_path=None, random_seed=None, keep_prev_batch=False):
+                 fe_path=None, random_seed=None,
+                 category_order=None,
+                 keep_prev_batch=False):
         '''A data loader to yield LL data batches
 
         Parameters
@@ -27,6 +29,8 @@ class DataLoader():
             Map category/instance to a single integer value
         random_seed: int or None
             Whether to shuffle categories with a given seed
+        category_order: list of str or None
+            Whether to predefine the order of the categories
         keep_prev_batch: bool
             Whether to keep the batch of the previous iteration in memory
             for the next iteration. Leads to an increased batch size after
@@ -46,12 +50,16 @@ class DataLoader():
         if fe_path is not None:
             from utils import featurizer
             self.fe = featurizer.Featurizer(fe_path)
-        # For iteration
-        self.categories = list(self.objects.keys())
-        if random_seed is not None:
-            random.seed(random_seed)
+        if category_order is not None:
+            self.categories = category_order
+        else:
+            # For iteration
+            self.categories = list(self.objects.keys())
+            # To pop in correct order
+            self.categories.reverse()
+            if random_seed is not None:
+                random.seed(random_seed)
             random.shuffle(self.categories)
-        self.categories.reverse()  # To pop in correct order
     
     def __next__(self):
         if len(self.categories) != 0:

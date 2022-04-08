@@ -13,6 +13,7 @@ class Config:
         self.TRAIN_OBJECTS = cfg['TRAIN_OBJECTS']
         self.TEST_OBJECTS = cfg['TEST_OBJECTS']
         self.SEED = cfg['SEED']
+        self.CATEGORY_ORDER = cfg['CATEGORY_ORDER']
 
         self.ALGORITHM_ARGS = cfg['ALGORITHM_ARGS']
         self.ALGORITHM = self.ALGORITHM_ARGS['ALGORITHM']
