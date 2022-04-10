@@ -127,6 +127,9 @@ class Logger():
             writer = csv.writer(f)
             writer.writerow(logs.keys())
             writer.writerows(zip(*logs.values()))
+        print()
+        print('Logged metrics: ', {k: v[-1] for k, v in logs.items()})
+        print()
 
     def write_config(self, config_dict):
         '''Writes dict to json. Useful for logging model configurations'''
