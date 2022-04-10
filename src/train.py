@@ -27,7 +27,7 @@ def train(cfg, dataset_path=None):
         category_indices=cfg.category_indices,
         instance_indices=cfg.instance_indices,
         random_seed=cfg.SEED,
-        category_order=cfg.CATEGORY_ORDER
+        category_order=cfg.CATEGORY_ORDER.copy()
     )
     test_dl = data_loader.DataLoader(
         ds_path=ds_path,
@@ -38,7 +38,7 @@ def train(cfg, dataset_path=None):
         instance_indices=cfg.instance_indices,
         random_seed=cfg.SEED,
         keep_prev_batch=True,
-        category_order=cfg.CATEGORY_ORDER
+        category_order=cfg.CATEGORY_ORDER.copy()
     )
     # Model
     m = model.Model(cfg.ALGORITHM)
@@ -53,7 +53,10 @@ def train(cfg, dataset_path=None):
         'time',
         'space'
     )
-    _logger.write_config(cfg.ALGORITHM_ARGS)
+    args_to_log = cfg.ALGORITHM_ARGS
+    args_to_log.update({'BC':cfg.BC})
+    args_to_log.update({'CATEGORY_ORDER': cfg.CATEGORY_ORDER})
+    _logger.write_config(args_to_log)
     # Train
     m.train(dataset=dl, test_dataset=test_dl, logger=_logger,
             args=cfg.ALGORITHM_ARGS)

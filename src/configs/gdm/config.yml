@@ -1,13 +1,13 @@
 # Config file for the GDM experiments
 
-ALGORITHM_ARGS:  # TODO: GS parameter lists!
+ALGORITHM_ARGS:
   ALGORITHM: GDM
   MAX_AGE: 6000
   NUM_CONTEXT: 2
-  LR_BMU: 0.5  # learning rate of BMU
-  LR_sBMU: 0.005  # learning rate of second BMU
-  A_THRESHOLD_GEM: 0.3  # activation threshold of G-EM network
-  A_THRESHOLD_GSM: 0.03  # activation threshold of G-SM network
+  LR_BMU: 0.3  # learning rate of BMU
+  LR_sBMU: 0.003  # learning rate of second BMU
+  A_THRESHOLD_GEM: 0.1  # activation threshold of G-EM network
+  A_THRESHOLD_GSM: 0.01  # activation threshold of G-SM network
   SKIP_FRAMES: 2
   EPOCHS: 1  # 1 since continuous learning
   REPLAY: True
@@ -15,16 +15,15 @@ ALGORITHM_ARGS:  # TODO: GS parameter lists!
   INPUT_DIMENSION: 128  # Input dimension of the network
 
 
-# Seed for category shuffling (TODO: Create a correct that fits runs)
+# Seed for category shuffling if CATEGORY_ORDER is null
 SEED: 128
 
 # Categories order
 # CATEGORY_ORDER: null
 CATEGORY_ORDER: ['ball', 'bottle', 'cup', 'doughnut', 'glasses', 'pen', 'pocket_watch', 'present', 'vase', 'book']
 
-# Path to dataset (TODO: remove own directory)
-# DS_PATH: /home/aleksej/phd/working_dir/LL/A_SOINN_plus/data/v_NICO_World_LL
-DS_PATH: /home/aleksej/phd/working_dir/LL/A_SOINN_plus/data/v_NICO_World_LL_feature_vectors
+# Path to dataset
+DS_PATH: ../data/v_NICO_World_LL_feature_vectors
 
 # Path to feature extractor pkl file (null: do not use feature extraction)
 FE_PATH: null

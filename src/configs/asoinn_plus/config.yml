@@ -1,33 +1,31 @@
 # Config file for the A-SOINN+ experiments
 
-ALGORITHM_ARGS:  # TODO: GS parameter lists!
+ALGORITHM_ARGS:
   ALGORITHM: A_SOINN_plus
   NUM_CONTEXT: 2
-  LR_BMU: 0.5
-  LR_sBMU: 0.005
+  LR_BMU: 3
+  LR_sBMU: 0.002
   SKIP_FRAMES: 2
   EPOCHS: 1  # 1 since continuous learning
   CREATION_CONSTRAINT: True
   ADAPTATION_CONSTRAINT: True
   INPUT_DIMENSION: 128  # Input dimension of the network
 
-# Seed for category shuffling (TODO: Create a correct that fits runs)
+# Seed for category shuffling if CATEGORY_ORDER is null
 SEED: 128
 
 # Categories order
 # CATEGORY_ORDER: null
 CATEGORY_ORDER: ['ball', 'bottle', 'cup', 'doughnut', 'glasses', 'pen', 'pocket_watch', 'present', 'vase', 'book']
 
-# Path to dataset (TODO: remove own directory)
-# DS_PATH: /home/aleksej/phd/working_dir/LL/A_SOINN_plus/data/v_NICO_World_LL
-DS_PATH: /home/aleksej/phd/working_dir/LL/data/v_NICO_World_LL_feature_vectors
+# Path to dataset
+DS_PATH: ../data/v_NICO_World_LL_feature_vectors
 
 # Path to feature extractor pkl file (null: do not use feature extraction)
 FE_PATH: null
-  # FE_PATH: /home/aleksej/phd/working_dir/LL/A_SOINN_plus/data/vNICORe100_feature_extractor_instance_128.h5
 
 # Which background complexity to train/test on
-BC: [B4]
+BC: [B1]
 
 # Define which objects/instances to use for testing/training
 # Note: o56,o57,o58,o59,o69 are removed to due permission issues

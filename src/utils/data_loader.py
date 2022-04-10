@@ -55,11 +55,11 @@ class DataLoader():
         else:
             # For iteration
             self.categories = list(self.objects.keys())
-            # To pop in correct order
-            self.categories.reverse()
             if random_seed is not None:
                 random.seed(random_seed)
             random.shuffle(self.categories)
+        # To pop in correct order
+        self.categories.reverse()
     
     def __next__(self):
         if len(self.categories) != 0:
